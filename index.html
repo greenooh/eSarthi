@@ -1,0 +1,2230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>eSevaKendra - User Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root{
+      --primary:#1d4ed8;
+      --primary-dark:#1e3a8a;
+      --accent:#f97316;
+      --success:#16a34a;
+      --danger:#dc2626;
+      --bg:#f5f8ff;
+      --bg-soft:#eef4ff;
+      --card:#ffffff;
+      --text:#102544;
+      --muted:#5d7193;
+      --border:#d8e2f3;
+      --shadow:0 14px 32px rgba(15,23,42,.07);
+      --radius:18px;
+      --radius-sm:12px;
+      --transition:.25s ease;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:linear-gradient(180deg,#f8fbff 0%,#edf4ff 100%);
+      color:var(--text);
+    }
+    img{max-width:100%;display:block}
+    button,input,textarea,select{font:inherit}
+    .hidden{display:none!important}
+
+    .card,.glass-card{
+      background:rgba(255,255,255,.97);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .card{padding:18px}
+
+    /* Loading */
+    #loading-screen{
+      position:fixed;
+      inset:0;
+      background:radial-gradient(circle at top,#e4eeff 0,#f9fbff 40%,#e7f0ff 100%);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
+      z-index:9999;
+      transition:opacity .35s ease;
+    }
+    #loading-screen.hidden{
+      opacity:0;
+      pointer-events:none;
+    }
+    .splash-logo-wrap{
+      width:140px;
+      height:140px;
+      background:#fff;
+      border-radius:28px;
+      padding:14px;
+      box-shadow:0 24px 60px rgba(15,23,42,.12);
+      animation:floatY 2.2s ease-in-out infinite;
+    }
+    @keyframes floatY{
+      0%,100%{transform:translateY(0)}
+      50%{transform:translateY(-8px)}
+    }
+    .splash-title{
+      font-size:30px;
+      font-weight:800;
+      color:var(--primary-dark);
+    }
+    .splash-subtitle{
+      font-size:14px;
+      color:var(--muted);
+      max-width:340px;
+      text-align:center;
+    }
+    .loader-spinner{
+      width:38px;
+      height:38px;
+      border-radius:50%;
+      border:3px solid #cadbfd;
+      border-top-color:var(--primary);
+      animation:spin .85s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Auth */
+    #auth-container{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:linear-gradient(160deg,#eff5ff,#f9fcff);
+    }
+    .auth-card{
+      width:100%;
+      max-width:430px;
+      padding:24px 22px;
+      background:#ffffffec;
+      border-radius:24px;
+      border:1px solid var(--border);
+      box-shadow:0 20px 60px rgba(15,23,42,.1);
+    }
+    .auth-brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      margin-bottom:16px;
+    }
+    .auth-brand img{
+      width:72px;
+      height:72px;
+      object-fit:contain;
+      border-radius:18px;
+      padding:5px;
+      background:#fff;
+      border:1px solid var(--border);
+    }
+    .auth-brand h1{margin:0;font-size:24px;color:var(--primary-dark);}
+    .auth-brand p{margin:4px 0 0;color:var(--muted);font-size:13px;}
+
+    .auth-tabs{
+      display:flex;
+      gap:4px;
+      padding:4px;
+      border-radius:999px;
+      background:var(--bg-soft);
+      margin-bottom:16px;
+    }
+    .auth-tab{
+      flex:1;
+      border:none;
+      background:transparent;
+      padding:10px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      color:var(--muted);
+      font-weight:700;
+      transition:var(--transition);
+    }
+    .auth-tab.active{
+      background:linear-gradient(135deg,var(--primary),#3b82f6);
+      color:#fff;
+      box-shadow:0 10px 22px rgba(37,99,235,.28);
+    }
+
+    .auth-form{display:none}
+    .auth-form.active{display:block}
+
+    .input-group{margin-bottom:14px}
+    .input-group label{
+      display:block;
+      margin-bottom:6px;
+      font-size:13px;
+      font-weight:600;
+      color:var(--muted);
+    }
+    .input-group input,
+    .input-group textarea,
+    .input-group select{
+      width:100%;
+      padding:11px 13px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      outline:none;
+      transition:var(--transition);
+    }
+    .input-group input:focus,
+    .input-group textarea:focus,
+    .input-group select:focus{
+      border-color:#8fb3ff;
+      box-shadow:0 0 0 4px rgba(59,130,246,.12);
+    }
+    .input-group input.error-field,
+    .input-group textarea.error-field{
+      border-color:var(--danger)!important;
+      box-shadow:0 0 0 3px rgba(220,38,38,.12)!important;
+    }
+    .field-error{
+      color:var(--danger);
+      font-size:12px;
+      margin-top:4px;
+      font-weight:600;
+      display:none;
+    }
+    .field-error.show{display:block}
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      padding:11px 16px;
+      border-radius:14px;
+      font-weight:700;
+      transition:var(--transition);
+    }
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 12px 26px rgba(15,23,42,.08);
+    }
+    .primary-btn{
+      background:linear-gradient(135deg,var(--primary),#3b82f6);
+      color:#fff;
+    }
+    .secondary-btn{
+      background:#eef4ff;
+      color:var(--primary-dark);
+    }
+    .outline-btn{
+      background:#fff;
+      color:var(--text);
+      border:1px solid var(--border);
+    }
+    .danger-btn{
+      background:linear-gradient(135deg,#ef4444,#dc2626);
+      color:#fff;
+    }
+    .success-btn{
+      background:linear-gradient(135deg,#22c55e,#16a34a);
+      color:#fff;
+    }
+    .full-width{width:100%}
+    .link-btn{
+      margin-top:10px;
+      border:none;
+      background:none;
+      color:var(--primary-dark);
+      cursor:pointer;
+      padding:0;
+      font-size:13px;
+      font-weight:700;
+    }
+
+    /* Modal */
+    #forgot-modal,
+    #token-history-modal,
+    #receipt-modal{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.22);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:90;
+    }
+    #forgot-modal.active,
+    #token-history-modal.active,
+    #receipt-modal.active{display:flex}
+
+    .modal-card{
+      background:#fff;
+      border-radius:var(--radius);
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      padding:22px;
+      width:100%;
+      max-width:480px;
+      max-height:90vh;
+      overflow-y:auto;
+    }
+    .modal-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:16px;
+    }
+    .modal-header h2{margin:0;font-size:18px;color:var(--primary-dark);}
+    .modal-close{
+      border:none;
+      background:none;
+      font-size:20px;
+      cursor:pointer;
+      color:var(--muted);
+      line-height:1;
+    }
+
+    /* Token badge */
+    .token-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:linear-gradient(135deg,#eef4ff,#e0e9ff);
+      border:1.5px solid #c7d9ff;
+      border-radius:12px;
+      padding:7px 12px;
+      font-size:13px;
+      font-weight:800;
+      color:var(--primary-dark);
+    }
+    .token-badge .copy-icon{
+      cursor:pointer;
+      opacity:.6;
+      transition:var(--transition);
+    }
+    .token-badge .copy-icon:hover{opacity:1;}
+
+    /* Token history list */
+    .token-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .token-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      padding:10px 14px;
+      border-radius:14px;
+      background:#f4f7ff;
+      border:1px solid var(--border);
+    }
+    .token-item-left{
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+    }
+    .token-item-id{
+      font-size:14px;
+      font-weight:800;
+      color:var(--primary-dark);
+    }
+    .token-item-meta{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    /* Toast */
+    #toast{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      min-width:230px;
+      max-width:320px;
+      padding:11px 14px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      box-shadow:var(--shadow);
+      transform:translateY(120%);
+      opacity:0;
+      transition:.25s ease;
+      z-index:10000;
+      font-size:13px;
+    }
+    #toast.show{transform:translateY(0);opacity:1;}
+    #toast.success{border-left:4px solid var(--success)}
+    #toast.error{border-left:4px solid var(--danger)}
+
+    /* App */
+    #app{min-height:100vh}
+
+    .topbar{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      z-index:60;
+      height:58px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:6px 12px;
+      background:rgba(255,255,255,.96);
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--border);
+    }
+    .topbar-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .topbar-right{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-shrink:0;
+    }
+    .brand-logo{
+      width:40px;
+      height:40px;
+      border-radius:12px;
+      padding:4px;
+      background:#fff;
+      border:1px solid var(--border);
+      object-fit:contain;
+      flex-shrink:0;
+    }
+    .brand-title-wrap{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      min-width:0;
+    }
+    .brand-title{
+      margin:0;
+      line-height:1;
+      font-size:16px;
+      font-weight:800;
+      color:var(--primary-dark);
+    }
+    .brand-subtitle{
+      margin-top:2px;
+      font-size:10px;
+      color:var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:180px;
+    }
+    .icon-btn{
+      width:34px;
+      height:34px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#fff;
+      cursor:pointer;
+      color:var(--primary-dark);
+      font-size:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition:var(--transition);
+    }
+    .icon-btn:hover{background:#f4f7ff;}
+    .profile-chip{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      background:#f3f6ff;
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:3px 8px 3px 3px;
+      max-width:140px;
+    }
+    .profile-chip span{
+      font-size:13px;
+      font-weight:700;
+      color:var(--primary-dark);
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .avatar{
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      background:linear-gradient(135deg,var(--primary),#60a5fa);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      font-size:12px;
+      flex-shrink:0;
+    }
+    .avatar.large{width:68px;height:68px;font-size:22px;}
+    .badge-wrapper{position:relative;}
+    .badge{
+      position:absolute;
+      top:-4px;
+      right:-4px;
+      min-width:16px;
+      height:16px;
+      padding:0 4px;
+      border-radius:999px;
+      background:#ef4444;
+      color:#fff;
+      font-size:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    #menu-toggle{display:none}
+
+    .layout{
+      max-width:1280px;
+      margin:72px auto 20px;
+      padding:0 14px 24px;
+      display:grid;
+      grid-template-columns:240px 1fr;
+      gap:18px;
+    }
+    .sidebar{
+      padding:14px;
+      position:sticky;
+      top:70px;
+      align-self:flex-start;
+    }
+    .sidebar nav{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .nav-link{
+      border:1px solid transparent;
+      background:#f1f5ff;
+      color:var(--muted);
+      border-radius:14px;
+      padding:11px 12px;
+      text-align:left;
+      cursor:pointer;
+      font-size:14px;
+      font-weight:700;
+      transition:var(--transition);
+    }
+    .nav-link.active,
+    .nav-link:hover{
+      background:linear-gradient(135deg,#e8f0ff,#fff);
+      border-color:#cfddff;
+      color:var(--primary-dark);
+    }
+    .sidebar-footer{margin-top:12px;}
+
+    .main-content{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      min-width:0;
+    }
+    .section{display:none;}
+    .section.active{display:block;}
+
+    .grid-4,.grid-3,.grid-2{
+      display:grid;
+      gap:16px;
+    }
+    .grid-4{grid-template-columns:2fr 1fr 1fr 1fr}
+    .grid-3{grid-template-columns:repeat(3,1fr)}
+    .grid-2{grid-template-columns:repeat(2,1fr)}
+
+    .muted{font-size:13px;color:var(--muted);}
+
+    .welcome-card h2,
+    .card h2,
+    .card h3{
+      margin-top:0;
+      color:var(--primary-dark);
+    }
+    .stat-card p{
+      margin:10px 0 0;
+      font-size:28px;
+      font-weight:800;
+      color:var(--primary-dark);
+    }
+    .service-card{transition:var(--transition);}
+    .service-card:hover{transform:translateY(-2px);}
+
+    /* Live posts */
+    .exam-list{display:grid;gap:14px;}
+    .exam-card{
+      padding:16px;
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:linear-gradient(180deg,#fff,#f3f7ff);
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .exam-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .exam-title{margin:0;font-size:17px;color:var(--primary-dark);}
+    .exam-org{margin-top:4px;font-size:13px;color:var(--muted);}
+    .exam-tags,.exam-meta,.exam-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+    }
+    .tag{
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      background:#eef4ff;
+      color:var(--primary-dark);
+      border:1px solid #dbe5ff;
+    }
+    .tag.orange{background:#fff7ed;color:#b45309;border-color:#fed7aa;}
+    .live-status{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      padding:7px 11px;
+      border-radius:999px;
+      background:#ecfdf3;
+      border:1px solid #bbf7d0;
+      color:#15803d;
+      font-size:13px;
+      font-weight:800;
+    }
+    .live-dot{
+      width:9px;
+      height:9px;
+      border-radius:50%;
+      background:#22c55e;
+      box-shadow:0 0 0 0 rgba(34,197,94,.55);
+      animation:pulse 1.2s infinite;
+    }
+    @keyframes pulse{
+      0%{transform:scale(1);box-shadow:0 0 0 0 rgba(34,197,94,.6)}
+      70%{transform:scale(1.2);box-shadow:0 0 0 10px rgba(34,197,94,0)}
+      100%{transform:scale(1);box-shadow:0 0 0 0 rgba(34,197,94,0)}
+    }
+    .mini-count-box{
+      padding:9px 11px;
+      border-radius:14px;
+      background:#f4f7ff;
+      border:1px solid var(--border);
+      min-width:120px;
+      display:inline-flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .mini-count-box strong{font-size:18px;color:var(--primary-dark);}
+    .mini-count-box span{font-size:12px;color:var(--muted);}
+
+    /* Orders */
+    .orders-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .orders-actions{display:flex;gap:8px;flex-wrap:wrap;}
+    .orders-list{display:flex;flex-direction:column;gap:12px;}
+    .order-card{
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:linear-gradient(180deg,#fff,#f3f7ff);
+      padding:14px;
+      display:grid;
+      grid-template-columns:2fr 1.3fr auto;
+      gap:12px;
+      align-items:flex-start;
+      box-shadow:var(--shadow);
+    }
+    .order-id{
+      font-size:13px;
+      font-weight:800;
+      color:var(--primary-dark);
+      word-break:break-all;
+    }
+    .order-tag{
+      display:inline-flex;
+      margin-top:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#eef4ff;
+      color:var(--primary-dark);
+      font-size:12px;
+      font-weight:700;
+    }
+    .order-status{
+      display:inline-flex;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+    }
+    .status-Pending{background:#fff7ed;color:#b45309}
+    .status-Reviewing,.status-In\ Process,.status-Submitted{background:#eff6ff;color:#1d4ed8}
+    .status-Completed{background:#ecfdf3;color:#166534}
+    .status-Rejected{background:#fef2f2;color:#b91c1c}
+
+    .order-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .small-btn{
+      padding:7px 10px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--primary-dark);
+      font-size:12px;
+      font-weight:700;
+      cursor:pointer;
+      transition:var(--transition);
+    }
+    .small-btn:hover{background:#f0f5ff;}
+    .timeline{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .timeline-step{
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:11px;
+      background:#eef3ff;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .timeline-step.active{
+      background:linear-gradient(135deg,var(--primary),#3b82f6);
+      color:#fff;
+    }
+
+    /* Payment */
+    .upi-box{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .fake-qr{
+      width:100px;
+      height:100px;
+      border-radius:18px;
+      border:2px dashed #cad5f7;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#fff;
+      color:var(--muted);
+      font-weight:800;
+      font-size:11px;
+    }
+
+    /* Receipt display */
+    .receipt-box{
+      background:#f8fbff;
+      border:1.5px dashed #c7d9ff;
+      border-radius:16px;
+      padding:18px;
+      font-size:13px;
+      line-height:1.8;
+    }
+    .receipt-box .r-title{
+      font-size:18px;
+      font-weight:800;
+      color:var(--primary-dark);
+      margin-bottom:10px;
+    }
+    .receipt-box .r-row{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      padding:6px 0;
+      border-bottom:1px solid #e8f0ff;
+    }
+    .receipt-box .r-row:last-child{border-bottom:none;}
+    .receipt-box .r-label{color:var(--muted);font-weight:600;}
+    .receipt-box .r-value{font-weight:700;color:var(--text);text-align:right;word-break:break-all;}
+    .receipt-no{
+      font-size:14px;
+      font-weight:800;
+      color:var(--primary-dark);
+      background:#eef4ff;
+      border:1px solid #c7d9ff;
+      border-radius:10px;
+      padding:6px 12px;
+      display:inline-block;
+      margin-bottom:10px;
+    }
+
+    /* Token select in payment */
+    .token-select-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height:220px;
+      overflow-y:auto;
+    }
+    .token-select-item{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      border-radius:14px;
+      border:1.5px solid var(--border);
+      background:#f8fbff;
+      cursor:pointer;
+      transition:var(--transition);
+    }
+    .token-select-item:hover,.token-select-item.selected{
+      border-color:#3b82f6;
+      background:#eff6ff;
+    }
+    .token-select-item input[type="radio"]{accent-color:var(--primary);}
+
+    /* Profile */
+    .profile-header{
+      display:flex;
+      gap:16px;
+      align-items:center;
+      margin-bottom:16px;
+      flex-wrap:wrap;
+    }
+    .profile-stats{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+      margin-bottom:18px;
+    }
+    .profile-stat{
+      padding:12px 14px;
+      border-radius:16px;
+      background:#f4f7ff;
+      border:1px solid var(--border);
+    }
+    .profile-stat h4{margin:0 0 6px;font-size:13px;color:var(--muted);}
+    .profile-stat p{margin:0;font-size:20px;font-weight:800;color:var(--primary-dark);}
+
+    /* Support */
+    .chat-box{
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:#f6f8ff;
+      overflow:hidden;
+    }
+    .chat-header{
+      padding:10px 12px;
+      border-bottom:1px solid var(--border);
+      background:#fff;
+      font-size:13px;
+      font-weight:700;
+      color:var(--primary-dark);
+    }
+    .chat-messages{
+      height:220px;
+      padding:12px;
+      overflow-y:auto;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .chat-message{
+      padding:8px 11px;
+      border-radius:14px;
+      font-size:13px;
+      max-width:80%;
+    }
+    .chat-message.admin{background:#eef4ff;color:var(--primary-dark);}
+    .chat-message.user{background:#ecfdf3;color:#166534;align-self:flex-end;}
+    .chat-input{
+      padding:9px;
+      display:flex;
+      gap:8px;
+      border-top:1px solid var(--border);
+      background:#fff;
+    }
+    .chat-input input{flex:1;}
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .layout{grid-template-columns:1fr;}
+      .sidebar{
+        position:fixed;
+        top:62px;
+        left:10px;
+        right:10px;
+        max-width:260px;
+        width:calc(100% - 20px);
+        z-index:55;
+        transform:translateY(-140%);
+        transition:transform .25s ease;
+      }
+      .sidebar.open{transform:translateY(0);}
+      #menu-toggle{display:flex;align-items:center;justify-content:center;}
+      .grid-4{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .order-card{grid-template-columns:1fr;}
+    }
+    @media (max-width: 720px){
+      .grid-4,.grid-3,.grid-2,.profile-stats{grid-template-columns:1fr;}
+      .topbar{padding:6px 10px;height:56px;}
+      .brand-title{font-size:15px;}
+      .brand-subtitle{display:none;}
+      .brand-logo{width:36px;height:36px;}
+      .profile-chip{padding:3px;}
+      .profile-chip span{display:none;}
+      .icon-btn{width:32px;height:32px;font-size:13px;}
+      .layout{margin-top:68px;}
+    }
+
+    /* Info alert */
+    .info-alert{
+      padding:10px 14px;
+      border-radius:12px;
+      background:#eff6ff;
+      border:1px solid #bcd5ff;
+      color:var(--primary-dark);
+      font-size:13px;
+      font-weight:600;
+      display:flex;
+      gap:8px;
+      align-items:flex-start;
+    }
+    .payment-status-badge{
+      padding:5px 11px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+    }
+    .pay-Pending{background:#fff7ed;color:#b45309;}
+    .pay-Paid,.pay-Verified{background:#ecfdf3;color:#166534;}
+    .pay-Submitted{background:#eff6ff;color:#1d4ed8;}
+    .pay-Failed{background:#fef2f2;color:#b91c1c;}
+  </style>
+</head>
+<body>
+
+  <!-- Loading -->
+  <div id="loading-screen">
+    <div class="splash-logo-wrap">
+      <img src="file_00000000a84c72088af56394f7eca893.jpg" alt="eSevaKendra Logo" />
+    </div>
+    <div class="splash-title">eSevaKendra</div>
+    <div class="splash-subtitle">Your Digital Service Partner for forms, job applications and support.</div>
+    <div class="loader-spinner"></div>
+  </div>
+
+  <!-- Auth -->
+  <div id="auth-container">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <img src="file_00000000a84c72088af56394f7eca893.jpg" alt="eSevaKendra Logo" />
+        <div>
+          <h1>eSevaKendra</h1>
+          <p>User Dashboard Login</p>
+        </div>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login-form">Login</button>
+        <button class="auth-tab" data-tab="signup-form">Sign up</button>
+      </div>
+
+      <form id="login-form" class="auth-form active">
+        <div class="input-group">
+          <label>Email</label>
+          <input type="email" id="login-email" required />
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="login-password" required />
+        </div>
+        <button type="submit" class="btn primary-btn full-width">Login</button>
+        <button type="button" id="forgot-password-btn" class="link-btn">Forgot password?</button>
+      </form>
+
+      <form id="signup-form" class="auth-form">
+        <div class="input-group">
+          <label>Full Name</label>
+          <input type="text" id="signup-name" required />
+        </div>
+        <div class="input-group">
+          <label>Email</label>
+          <input type="email" id="signup-email" required />
+        </div>
+        <div class="input-group">
+          <label>Phone</label>
+          <input type="tel" id="signup-phone" placeholder="10-digit mobile number" required />
+          <div class="field-error" id="signup-phone-err">Enter a valid 10-digit phone number</div>
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="signup-password" required />
+        </div>
+        <button type="submit" class="btn primary-btn full-width">Create account</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Reset modal -->
+  <div id="forgot-modal">
+    <div class="modal-card" style="max-width:380px;">
+      <h2>Reset Password</h2>
+      <p class="muted">Enter your email address to receive a password reset link.</p>
+      <div class="input-group">
+        <label>Email</label>
+        <input type="email" id="reset-email" />
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
+        <button id="close-reset-modal" class="btn outline-btn">Close</button>
+        <button id="send-reset-link" class="btn primary-btn">Send link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Token History Modal -->
+  <div id="token-history-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🎫 My Token History</h2>
+        <button class="modal-close" id="close-token-modal">✕</button>
+      </div>
+      <p class="muted" style="margin-bottom:14px;">All your request Token IDs. Share these with admin for verification.</p>
+      <div id="token-history-list" class="token-list">
+        <div class="muted">No requests found.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Receipt Modal -->
+  <div id="receipt-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🧾 Payment Receipt</h2>
+        <button class="modal-close" id="close-receipt-modal">✕</button>
+      </div>
+      <div id="receipt-content"></div>
+      <div style="display:flex;gap:10px;margin-top:14px;justify-content:flex-end;flex-wrap:wrap;">
+        <button id="print-receipt-btn" class="btn secondary-btn">🖨 Print</button>
+        <button class="btn outline-btn" id="close-receipt-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- App -->
+  <div id="app" class="hidden">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button id="menu-toggle" class="icon-btn">☰</button>
+        <img class="brand-logo" src="file_00000000a84c72088af56394f7eca893.jpg" alt="eSevaKendra Logo" />
+        <div class="brand-title-wrap">
+          <div class="brand-title">eSevaKendra</div>
+          <div class="brand-subtitle">Digital Service Dashboard</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button id="token-history-btn" class="icon-btn" title="My Token History" style="font-size:16px;">🎫</button>
+        <div class="badge-wrapper">
+          <button id="notification-btn" class="icon-btn" title="Notifications">🔔</button>
+          <span id="notification-badge" class="badge hidden"></span>
+        </div>
+        <div class="profile-chip">
+          <div class="avatar" id="nav-avatar">U</div>
+          <span id="nav-username">User</span>
+        </div>
+        <button id="logout-btn" class="icon-btn" title="Logout">⏻</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar card" id="sidebar">
+        <nav>
+          <button class="nav-link active" data-section="home-section">🏠 Home</button>
+          <button class="nav-link" data-section="new-request-section">📋 New Request</button>
+          <button class="nav-link" data-section="custom-request-section">✍️ Custom Request</button>
+          <button class="nav-link" data-section="orders-section">📦 My Orders</button>
+          <button class="nav-link" data-section="payments-section">💳 Payments</button>
+          <button class="nav-link" data-section="support-section">🎧 Support</button>
+          <button class="nav-link" data-section="profile-section">👤 Profile</button>
+        </nav>
+        <div class="sidebar-footer">
+          <button id="sidebar-logout-btn" class="btn danger-btn full-width" style="margin-top:8px;">Logout</button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+
+        <!-- Home -->
+        <section id="home-section" class="section active">
+          <div class="card welcome-card" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:none;">
+            <h2 style="color:#fff;margin-bottom:6px;">Welcome, <span id="welcome-name">User</span> 👋</h2>
+            <p style="opacity:.85;margin:0;">Manage your government and job-related digital forms in one place.</p>
+          </div>
+
+          <div class="grid-4">
+            <div class="card stat-card">
+              <div class="muted">Total Orders</div>
+              <p id="total-orders">0</p>
+            </div>
+            <div class="card stat-card">
+              <div class="muted">Pending Orders</div>
+              <p id="pending-orders">0</p>
+            </div>
+            <div class="card stat-card">
+              <div class="muted">Completed Orders</div>
+              <p id="completed-orders">0</p>
+            </div>
+            <div class="card stat-card">
+              <div class="muted" style="font-size:12px;">Quick Action</div>
+              <button class="btn primary-btn full-width" style="margin-top:10px;font-size:13px;" onclick="document.querySelector('.nav-link[data-section=\"token-history-btn\"]')">
+              </button>
+              <button class="btn secondary-btn full-width" style="margin-top:6px;font-size:13px;" id="home-token-btn">🎫 My Tokens</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>📢 Important Updates</h3>
+            <ul class="muted" style="margin:0;padding-left:18px;line-height:2;">
+              <li>If any job or form is not available on the home page, use the custom request section.</li>
+              <li>Your order status updates live in the My Orders section.</li>
+              <li>Desk may send notifications for approvals, document needs or payment updates.</li>
+              <li>Use your <strong>Token ID</strong> when admin asks to verify your request.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3>Live Jobs &amp; Posts</h3>
+            <div id="exam-list" class="exam-list">
+              <div class="muted">Loading...</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- New Request -->
+        <section id="new-request-section" class="section">
+          <div class="card">
+            <h2>New Service Request</h2>
+            <form id="service-form" novalidate>
+              <div class="input-group">
+                <label>Service Category *</label>
+                <select id="service-category" required>
+                  <option value="">— Select service —</option>
+                  <option>Aadhar Card Services</option>
+                  <option>PAN Card Services</option>
+                  <option>Ration Card</option>
+                  <option>Birth Certificate</option>
+                  <option>Income Certificate</option>
+                  <option>Caste Certificate</option>
+                  <option>Domicile Certificate</option>
+                  <option>Driving License</option>
+                  <option>Voter ID</option>
+                  <option>Passport</option>
+                  <option>Job / Exam Application</option>
+                  <option>Scholarship Form</option>
+                  <option>College Admission</option>
+                  <option>Other</option>
+                </select>
+                <div class="field-error" id="cat-err">Please select a service category</div>
+              </div>
+
+              <div class="grid-2">
+                <div class="input-group">
+                  <label>Full Name *</label>
+                  <input type="text" id="service-name" placeholder="As on official document" required />
+                  <div class="field-error" id="name-err">Full name is required</div>
+                </div>
+                <div class="input-group">
+                  <label>Phone Number *</label>
+                  <input type="tel" id="service-phone" placeholder="10-digit mobile number" maxlength="10" required />
+                  <div class="field-error" id="phone-err">Enter a valid 10-digit phone number</div>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label>Email Address *</label>
+                <input type="email" id="service-email" placeholder="example@email.com" required />
+                <div class="field-error" id="email-err">Enter a valid email address</div>
+              </div>
+
+              <div class="input-group">
+                <label>Address *</label>
+                <textarea id="service-address" rows="2" placeholder="Full address including city, state, pincode" required></textarea>
+                <div class="field-error" id="addr-err">Address is required</div>
+              </div>
+
+              <div class="input-group">
+                <label>Other ID / Reference No. (Optional)</label>
+                <input type="text" id="service-other-id" placeholder="Voter ID, Registration No., etc." />
+              </div>
+
+              <div class="input-group">
+                <label>Additional Notes</label>
+                <textarea id="service-notes" rows="3" placeholder="Any extra info for admin…"></textarea>
+              </div>
+
+              <button type="submit" class="btn primary-btn">Submit Request</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- Custom Request -->
+        <section id="custom-request-section" class="section">
+          <div class="card">
+            <h2>Custom Form Request</h2>
+            <p class="muted">If any job, exam or government form is not shown on the website, send a direct message to eSeva Desk here.</p>
+            <form id="custom-request-form" style="margin-top:10px;" novalidate>
+              <div class="input-group">
+                <label>Form / Job Title *</label>
+                <input type="text" id="custom-title" placeholder="Example: Railway भर्ती, SSC GD, Admission Form" required />
+                <div class="field-error" id="ctitle-err">Title is required</div>
+              </div>
+              <div class="input-group">
+                <label>Official Website / Link (Optional)</label>
+                <input type="url" id="custom-link" placeholder="https://..." />
+                <div class="field-error" id="curl-err">Enter a valid URL (must start with https://)</div>
+              </div>
+              <div class="input-group">
+                <label>Message to Admin *</label>
+                <textarea id="custom-description" rows="4" placeholder="Write which form you want to fill, deadline, department, eligibility or any extra info." required></textarea>
+                <div class="field-error" id="cdesc-err">Please describe your request</div>
+              </div>
+              <button type="submit" class="btn primary-btn">Send Custom Request</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- Orders -->
+        <section id="orders-section" class="section">
+          <div class="card">
+            <div class="orders-header">
+              <div>
+                <h2>My Orders</h2>
+                <p class="muted">Track all your submitted requests in realtime.</p>
+              </div>
+              <div class="orders-actions">
+                <input type="text" id="order-search" placeholder="Search by Token / Service" />
+                <select id="order-status-filter">
+                  <option value="">All statuses</option>
+                  <option>Pending</option>
+                  <option>Reviewing</option>
+                  <option>In Process</option>
+                  <option>Submitted</option>
+                  <option>Completed</option>
+                  <option>Rejected</option>
+                </select>
+              </div>
+            </div>
+            <div id="orders-list" class="orders-list"></div>
+          </div>
+        </section>
+
+        <!-- Payments -->
+        <section id="payments-section" class="section">
+          <div class="grid-2">
+            <div class="card">
+              <h2>UPI Payment</h2>
+              <div class="upi-box">
+                <div class="fake-qr">Scan QR</div>
+                <div>
+                  <p><strong>UPI ID:</strong> yourupiid@bank</p>
+                  <p class="muted">Pay the amount and then submit payment details below with your Token ID.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2>Submit Payment</h2>
+              <form id="payment-form" novalidate>
+                <div class="input-group">
+                  <label>Select Your Request Token *</label>
+                  <div id="payment-token-select" class="token-select-list">
+                    <div class="muted" style="padding:8px;">Loading your requests...</div>
+                  </div>
+                  <div class="field-error" id="pay-token-err">Please select a request</div>
+                </div>
+                <div class="input-group" style="margin-top:12px;">
+                  <label>Transaction ID / UTR Number *</label>
+                  <input type="text" id="payment-txn-id" placeholder="12-digit UTR or UPI Ref No." required />
+                  <div class="field-error" id="pay-txn-err">Enter the transaction/UTR number</div>
+                </div>
+                <div class="input-group">
+                  <label>Amount Paid (₹) *</label>
+                  <input type="number" id="payment-amount" placeholder="e.g. 150" min="1" required />
+                  <div class="field-error" id="pay-amt-err">Enter the amount paid</div>
+                </div>
+                <div class="input-group">
+                  <label>Notes (Optional)</label>
+                  <textarea id="payment-notes" rows="2" placeholder="Any extra info..."></textarea>
+                </div>
+                <button type="submit" class="btn primary-btn full-width">Submit Payment Details</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Support -->
+        <section id="support-section" class="section">
+          <div class="grid-2">
+            <div class="card">
+              <h2>Support</h2>
+              <p class="muted">Need help? Contact desk using support ticket or simple chat UI.</p>
+              <div class="chat-box">
+                <div class="chat-header">Live Chat (UI only)</div>
+                <div class="chat-messages" id="chat-messages">
+                  <div class="chat-message admin">Hello! How can we help you today?</div>
+                </div>
+                <div class="chat-input">
+                  <input type="text" id="chat-input-field" placeholder="Type your message..." />
+                  <button id="chat-send-btn" class="icon-btn">➤</button>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <h2>Submit Ticket</h2>
+              <form id="ticket-form">
+                <div class="input-group">
+                  <label>Subject</label>
+                  <input type="text" id="ticket-subject" required />
+                </div>
+                <div class="input-group">
+                  <label>Describe your issue</label>
+                  <textarea id="ticket-message" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn primary-btn">Submit Ticket</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Profile -->
+        <section id="profile-section" class="section">
+          <div class="card">
+            <div class="profile-header">
+              <div class="avatar large" id="profile-avatar">U</div>
+              <div>
+                <h2 id="profile-name">User Name</h2>
+                <p id="profile-email" class="muted">user@email.com</p>
+                <p class="muted">Joined: <span id="profile-joined">-</span></p>
+              </div>
+            </div>
+
+            <div class="profile-stats">
+              <div class="profile-stat">
+                <h4>Total Orders</h4>
+                <p id="profile-total-orders">0</p>
+              </div>
+              <div class="profile-stat">
+                <h4>Phone</h4>
+                <p id="profile-phone">-</p>
+              </div>
+              <div class="profile-stat">
+                <h4>Wallet Balance</h4>
+                <p>₹ <span id="profile-wallet">0</span></p>
+              </div>
+            </div>
+
+            <h3>Edit Profile</h3>
+            <form id="profile-form" novalidate>
+              <div class="grid-2">
+                <div class="input-group">
+                  <label>Full Name</label>
+                  <input type="text" id="profile-edit-name" />
+                </div>
+                <div class="input-group">
+                  <label>Phone</label>
+                  <input type="tel" id="profile-edit-phone" placeholder="10-digit mobile number" maxlength="10" />
+                  <div class="field-error" id="profile-phone-err">Enter a valid 10-digit phone number</div>
+                </div>
+              </div>
+              <button type="submit" class="btn secondary-btn">Save Profile</button>
+            </form>
+
+            <h3 style="margin-top:22px;">Change Password</h3>
+            <form id="password-form">
+              <div class="grid-2">
+                <div class="input-group">
+                  <label>Current Password</label>
+                  <input type="password" id="current-password" required />
+                </div>
+                <div class="input-group">
+                  <label>New Password</label>
+                  <input type="password" id="new-password" required />
+                  <div class="field-error" id="newpwd-err">Password must be at least 6 characters</div>
+                </div>
+              </div>
+              <button type="submit" class="btn primary-btn">Update Password</button>
+            </form>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script type="module" async>
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      sendPasswordResetEmail,
+      onAuthStateChanged,
+      signOut,
+      updatePassword,
+      EmailAuthProvider,
+      reauthenticateWithCredential,
+      setPersistence,
+      browserLocalPersistence
+    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+    import {
+      getDatabase,
+      ref,
+      set,
+      push,
+      onValue,
+      query,
+      orderByChild,
+      equalTo,
+      update,
+      get
+    } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkpObsqUnAo81cLVvlDg4rp-4ooYa7XYI",
+      authDomain: "iste-74fbf.firebaseapp.com",
+      databaseURL: "https://iste-74fbf-default-rtdb.firebaseio.com",
+      projectId: "iste-74fbf",
+      storageBucket: "iste-74fbf.firebasestorage.app",
+      messagingSenderId: "389739094994",
+      appId: "1:389739094994:web:4c7fd74edd6a7288009e0b",
+      measurementId: "G-NNEL80831M"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    // WebView fix: force inMemory persistence if IndexedDB is not available
+    const isWebView = /wv|WebView/.test(navigator.userAgent) || (typeof Android !== "undefined");
+    try {
+      await setPersistence(auth, isWebView ? inMemoryPersistence : browserLocalPersistence);
+    } catch(e) {
+      try { await setPersistence(auth, inMemoryPersistence); } catch(e2) {}
+    }
+
+    // Hard safety timeout: hide loading screen after 8s no matter what
+    setTimeout(() => {
+      const ls = document.getElementById("loading-screen");
+      if (ls && !ls.classList.contains("hidden")) {
+        ls.classList.add("hidden");
+        document.getElementById("auth-container").classList.remove("hidden");
+      }
+    }, 8000);
+
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    let currentUser = null;
+    let allOrders = [];
+    let notifications = [];
+    let examPosts = [];
+    let selectedPostIdForApply = null;
+    let liveOrderUnsub = null;
+
+    // ── Toast ──────────────────────────────────────────────────────
+    function showToast(message, type = "success") {
+      const toast = $("#toast");
+      toast.textContent = message;
+      toast.className = "";
+      toast.classList.add(type === "error" ? "error" : "success");
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3200);
+    }
+
+    // ── ID Generators ──────────────────────────────────────────────
+    function generateOrderId() {
+      const d = new Date();
+      return (
+        "TKN-" +
+        d.getFullYear().toString().slice(-2) +
+        ("0" + (d.getMonth() + 1)).slice(-2) +
+        ("0" + d.getDate()).slice(-2) +
+        "-" +
+        Math.random().toString(36).substring(2, 7).toUpperCase()
+      );
+    }
+
+    function generateReceiptNo(orderId) {
+      return "RCP-" + orderId.replace("TKN-", "") + "-" + Math.random().toString(36).substring(2,5).toUpperCase();
+    }
+
+    function formatDate(ts) {
+      const d = new Date(ts);
+      return d.toLocaleDateString("en-IN") + " " + d.toLocaleTimeString("en-IN", {hour:"2-digit",minute:"2-digit"});
+    }
+
+    function getInitials(name = "User") {
+      return name.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase();
+    }
+
+    // ── Validation Helpers ─────────────────────────────────────────
+    function isValidPhone(v) { return /^[6-9]\d{9}$/.test(v.trim()); }
+    function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); }
+    function isValidUrl(v)   { return !v || /^https?:\/\/.+/.test(v.trim()); }
+
+    function showFieldError(errId, inputEl, show) {
+      const errEl = $("#" + errId);
+      if (!errEl) return;
+      if (show) {
+        errEl.classList.add("show");
+        if (inputEl) inputEl.classList.add("error-field");
+      } else {
+        errEl.classList.remove("show");
+        if (inputEl) inputEl.classList.remove("error-field");
+      }
+    }
+
+    function clearErrors(...ids) {
+      ids.forEach(id => {
+        const el = $("#" + id);
+        if (el) el.classList.remove("show");
+      });
+      $$(".error-field").forEach(el => el.classList.remove("error-field"));
+    }
+
+    // ── Auth Tabs ──────────────────────────────────────────────────
+    $$(".auth-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        $$(".auth-tab").forEach(t => t.classList.remove("active"));
+        $$(".auth-form").forEach(f => f.classList.remove("active"));
+        tab.classList.add("active");
+        $("#" + tab.dataset.tab).classList.add("active");
+      });
+    });
+
+    // ── Login ──────────────────────────────────────────────────────
+    $("#login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        await signInWithEmailAndPassword(auth, $("#login-email").value.trim(), $("#login-password").value);
+        showToast("Login successful");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+    // ── Sign up ────────────────────────────────────────────────────
+    $("#signup-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const phone = $("#signup-phone").value.trim();
+      if (!isValidPhone(phone)) {
+        showFieldError("signup-phone-err", $("#signup-phone"), true);
+        return;
+      }
+      showFieldError("signup-phone-err", $("#signup-phone"), false);
+      try {
+        const uc = await createUserWithEmailAndPassword(auth, $("#signup-email").value.trim(), $("#signup-password").value);
+        await set(ref(db, "users/" + uc.user.uid), {
+          name: $("#signup-name").value.trim(),
+          email: $("#signup-email").value.trim(),
+          phone,
+          wallet: 0,
+          createdAt: Date.now()
+        });
+        showToast("Account created!");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+    // ── Forgot password ────────────────────────────────────────────
+    $("#forgot-password-btn").addEventListener("click", () => { $("#forgot-modal").classList.add("active"); });
+    $("#close-reset-modal").addEventListener("click", () => { $("#forgot-modal").classList.remove("active"); });
+    $("#send-reset-link").addEventListener("click", async () => {
+      try {
+        await sendPasswordResetEmail(auth, $("#reset-email").value.trim());
+        showToast("Reset link sent!");
+        $("#forgot-modal").classList.remove("active");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+    // ── Logout ─────────────────────────────────────────────────────
+    async function doLogout() {
+      await signOut(auth);
+      showToast("Logged out");
+    }
+    $("#logout-btn").addEventListener("click", doLogout);
+    $("#sidebar-logout-btn").addEventListener("click", doLogout);
+
+    // ── Menu toggle ────────────────────────────────────────────────
+    $("#menu-toggle").addEventListener("click", () => {
+      $("#sidebar").classList.toggle("open");
+    });
+
+    // ── Nav links ──────────────────────────────────────────────────
+    $$(".nav-link").forEach(link => {
+      link.addEventListener("click", () => {
+        $$(".nav-link").forEach(l => l.classList.remove("active"));
+        $$(".section").forEach(s => s.classList.remove("active"));
+        link.classList.add("active");
+        const target = link.dataset.section;
+        if (target) {
+          const sec = $("#" + target);
+          if (sec) sec.classList.add("active");
+        }
+        if (window.innerWidth <= 980) $("#sidebar").classList.remove("open");
+
+        if (target === "payments-section") renderPaymentTokenSelect();
+      });
+    });
+
+    // ── Token History Modal ────────────────────────────────────────
+    function openTokenHistoryModal() {
+      renderTokenHistoryList();
+      $("#token-history-modal").classList.add("active");
+    }
+    $("#token-history-btn").addEventListener("click", openTokenHistoryModal);
+    $("#home-token-btn").addEventListener("click", openTokenHistoryModal);
+    $("#close-token-modal").addEventListener("click", () => { $("#token-history-modal").classList.remove("active"); });
+
+    function renderTokenHistoryList() {
+      const container = $("#token-history-list");
+      const sorted = [...allOrders].sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+      if (!sorted.length) {
+        container.innerHTML = '<div class="muted" style="padding:10px;">No requests submitted yet.</div>';
+        return;
+      }
+      container.innerHTML = "";
+      sorted.forEach(order => {
+        const item = document.createElement("div");
+        item.className = "token-item";
+        item.innerHTML = `
+          <div class="token-item-left">
+            <div class="token-item-id">🎫 ${order.orderId || "-"}</div>
+            <div class="token-item-meta">${order.serviceCategory || "-"} &bull; ${formatDate(order.createdAt || Date.now())}</div>
+            <div class="token-item-meta">Status: <strong>${order.status||"Pending"}</strong> &bull; Payment: <strong>${order.paymentStatus||"Pending"}</strong> &bull; Receipt: <strong>${order.receiptNo||"-"}</strong></div>
+          </div>
+          <button class="small-btn copy-token-btn" data-id="${order.orderId}">📋 Copy</button>
+        `;
+        container.appendChild(item);
+      });
+      $$(".copy-token-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          navigator.clipboard.writeText(btn.dataset.id);
+          showToast("Token ID copied! Share with admin for verification.");
+        });
+      });
+    }
+
+    // ── Receipt Modal ──────────────────────────────────────────────
+    function openReceiptModal(order) {
+      const rc = $("#receipt-content");
+      const receiptNo = order.receiptNo || generateReceiptNo(order.orderId);
+      rc.innerHTML = `
+        <div class="receipt-no">Receipt No: ${receiptNo}</div>
+        <div class="receipt-box">
+          <div class="r-title">eSevaKendra — Payment Receipt</div>
+          <div class="r-row"><span class="r-label">Token ID</span><span class="r-value">${order.orderId||"-"}</span></div>
+          <div class="r-row"><span class="r-label">Service</span><span class="r-value">${order.serviceCategory||"-"}</span></div>
+          <div class="r-row"><span class="r-label">Full Name</span><span class="r-value">${order.fullName||"-"}</span></div>
+          <div class="r-row"><span class="r-label">Transaction ID</span><span class="r-value">${order.txnId||"-"}</span></div>
+          <div class="r-row"><span class="r-label">Amount Paid</span><span class="r-value">₹ ${order.amountPaid||"-"}</span></div>
+          <div class="r-row"><span class="r-label">Payment Status</span><span class="r-value">${order.paymentStatus||"Pending"}</span></div>
+          <div class="r-row"><span class="r-label">Request Status</span><span class="r-value">${order.status||"Pending"}</span></div>
+          <div class="r-row"><span class="r-label">Submitted On</span><span class="r-value">${formatDate(order.createdAt||Date.now())}</span></div>
+          <div class="r-row"><span class="r-label">Payment Submitted</span><span class="r-value">${order.paymentSubmittedAt ? formatDate(order.paymentSubmittedAt) : "-"}</span></div>
+        </div>
+      `;
+      $("#receipt-modal").classList.add("active");
+      $("#print-receipt-btn").onclick = () => {
+        const win = window.open("","_blank");
+        win.document.write(`<html><head><title>Receipt - ${order.orderId}</title>
+        <style>body{font-family:Arial,sans-serif;padding:30px;max-width:500px;margin:auto;}
+        h2{color:#1e3a8a;} table{width:100%;border-collapse:collapse;}
+        td{padding:8px 6px;border-bottom:1px solid #e0e8ff;font-size:13px;}
+        td:first-child{color:#5d7193;font-weight:600;} td:last-child{font-weight:700;text-align:right;word-break:break-all;}
+        .rno{background:#eef4ff;padding:6px 12px;border-radius:8px;font-weight:800;color:#1d4ed8;display:inline-block;margin-bottom:14px;}
+        </style></head><body>
+        <h2>eSevaKendra Receipt</h2>
+        <div class="rno">Receipt No: ${receiptNo}</div>
+        <table>
+          <tr><td>Token ID</td><td>${order.orderId||"-"}</td></tr>
+          <tr><td>Service</td><td>${order.serviceCategory||"-"}</td></tr>
+          <tr><td>Full Name</td><td>${order.fullName||"-"}</td></tr>
+          <tr><td>Transaction ID</td><td>${order.txnId||"-"}</td></tr>
+          <tr><td>Amount Paid</td><td>₹ ${order.amountPaid||"-"}</td></tr>
+          <tr><td>Payment Status</td><td>${order.paymentStatus||"Pending"}</td></tr>
+          <tr><td>Request Status</td><td>${order.status||"Pending"}</td></tr>
+          <tr><td>Date</td><td>${formatDate(order.createdAt||Date.now())}</td></tr>
+        </table>
+        </body></html>`);
+        win.document.close();
+        win.print();
+      };
+    }
+    $("#close-receipt-modal").addEventListener("click", () => { $("#receipt-modal").classList.remove("active"); });
+    $("#close-receipt-btn").addEventListener("click", () => { $("#receipt-modal").classList.remove("active"); });
+
+    // ── Firebase Auth State ────────────────────────────────────────
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        $("#auth-container").classList.add("hidden");
+        $("#app").classList.remove("hidden");
+        $("#loading-screen").classList.add("hidden");
+
+        const snap = await get(ref(db, "users/" + user.uid));
+        const userData = snap.val() || {};
+        const displayName = userData.name || user.displayName || user.email.split("@")[0];
+
+        $("#welcome-name").textContent = displayName;
+        $("#nav-username").textContent = displayName;
+        $("#nav-avatar").textContent = getInitials(displayName);
+        $("#profile-avatar").textContent = getInitials(displayName);
+        $("#profile-name").textContent = displayName;
+        $("#profile-email").textContent = user.email;
+        $("#profile-joined").textContent = formatDate(userData.createdAt || user.metadata.creationTime);
+        $("#profile-phone").textContent = userData.phone || "-";
+        $("#profile-wallet").textContent = userData.wallet || 0;
+        $("#profile-edit-name").value = displayName;
+        $("#profile-edit-phone").value = userData.phone || "";
+
+        onValue(ref(db, "users/" + user.uid + "/ordersIndex"), async (snap) => {
+          const ids = [];
+          snap.forEach(child => ids.push(child.key));
+          const results = [];
+          for (const orderId of ids) {
+            try {
+              const oSnap = await get(ref(db, "orders/" + orderId));
+              if (oSnap.exists()) results.push({ id: orderId, ...oSnap.val() });
+            } catch (e) {}
+          }
+          allOrders = results.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+          updateStats();
+          renderOrders();
+          renderPaymentTokenSelect();
+          renderTokenHistoryList();
+        });
+
+        onValue(ref(db, "users/" + user.uid + "/notifications"), (snap) => {
+          notifications = [];
+          snap.forEach(child => { notifications.push(child.val()); });
+          updateNotificationBadge();
+        });
+
+        // Load exam posts
+        onValue(ref(db, "examPosts"), (snap) => {
+          examPosts = [];
+          snap.forEach(child => { examPosts.push({ id: child.key, ...child.val() }); });
+          renderExamPosts();
+        });
+
+      } else {
+        currentUser = null;
+        $("#auth-container").classList.remove("hidden");
+        $("#app").classList.add("hidden");
+        setTimeout(() => $("#loading-screen").classList.add("hidden"), 1200);
+      }
+    });
+
+    // ── Stats ──────────────────────────────────────────────────────
+    function updateStats() {
+      const total = allOrders.length;
+      const pending = allOrders.filter(o => o.status === "Pending").length;
+      const completed = allOrders.filter(o => o.status === "Completed").length;
+      $("#total-orders").textContent = total;
+      $("#pending-orders").textContent = pending;
+      $("#completed-orders").textContent = completed;
+      $("#profile-total-orders").textContent = total;
+    }
+
+    // ── Orders Render ──────────────────────────────────────────────
+    function renderOrders() {
+      const container = $("#orders-list");
+      container.innerHTML = "";
+      const term = $("#order-search").value.trim().toLowerCase();
+      const statusFilter = $("#order-status-filter").value;
+
+      const filtered = allOrders
+        .filter(order => {
+          const matchSearch =
+            !term ||
+            (order.orderId && order.orderId.toLowerCase().includes(term)) ||
+            (order.serviceCategory && order.serviceCategory.toLowerCase().includes(term));
+          const matchStatus = !statusFilter || order.status === statusFilter;
+          return matchSearch && matchStatus;
+        })
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      if (!filtered.length) {
+        container.innerHTML = `<div class="muted">No orders found.</div>`;
+        return;
+      }
+
+      const steps = ["Pending", "Reviewing", "In Process", "Submitted", "Completed", "Rejected"];
+
+      filtered.forEach(order => {
+        const card = document.createElement("div");
+        card.className = "order-card";
+
+        const payBadge = `<span class="payment-status-badge pay-${(order.paymentStatus||"Pending").replace(/\s+/g,"")}">💳 ${order.paymentStatus||"Pending"}</span>`;
+
+        card.innerHTML = `
+          <div>
+            <div class="order-id">🎫 ${order.orderId || "-"}</div>
+            <div class="token-badge" style="margin-top:6px;">
+              <span>${order.orderId||"-"}</span>
+              <span class="copy-icon copy-token-order" data-id="${order.orderId}" title="Copy Token">📋</span>
+            </div>
+            <div class="order-tag">${order.serviceCategory || "-"}</div>
+            <div class="muted" style="margin-top:8px;">📅 ${formatDate(order.createdAt || Date.now())}</div>
+          </div>
+          <div>
+            <div class="order-status status-${(order.status || "Pending").replace(/ /g, "\\ ")}">${order.status || "Pending"}</div>
+            <div style="margin-top:8px;">${payBadge}</div>
+            <div class="muted" style="margin-top:6px;">Remarks: ${order.adminRemarks || "—"}</div>
+          </div>
+          <div class="order-actions">
+            <button class="small-btn copy-btn" data-id="${order.orderId}">📋 Copy Token</button>
+            <button class="small-btn receipt-view-btn" data-id="${order.orderId}">🧾 Receipt</button>
+          </div>
+        `;
+
+        const timeline = document.createElement("div");
+        timeline.className = "timeline";
+        steps.forEach(step => {
+          const el = document.createElement("div");
+          el.className = "timeline-step" + (order.status === step ? " active" : "");
+          el.textContent = step;
+          timeline.appendChild(el);
+        });
+        card.firstElementChild.appendChild(timeline);
+        container.appendChild(card);
+      });
+
+      $$(".copy-btn, .copy-token-order").forEach(btn => {
+        btn.addEventListener("click", () => {
+          navigator.clipboard.writeText(btn.dataset.id);
+          showToast("Token ID copied! Share with admin for verification.");
+        });
+      });
+
+      $$(".receipt-view-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const order = allOrders.find(o => o.orderId === btn.dataset.id);
+          if (order) openReceiptModal(order);
+        });
+      });
+    }
+
+    $("#order-search").addEventListener("input", renderOrders);
+    $("#order-status-filter").addEventListener("change", renderOrders);
+
+    // ── Payment Token Select ───────────────────────────────────────
+    function renderPaymentTokenSelect() {
+      const container = $("#payment-token-select");
+      if (!allOrders.length) {
+        container.innerHTML = '<div class="muted" style="padding:8px;">No requests found. Submit a request first.</div>';
+        return;
+      }
+      container.innerHTML = "";
+      const sorted = [...allOrders].sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+      sorted.forEach(order => {
+        const item = document.createElement("label");
+        item.className = "token-select-item";
+        item.innerHTML = `
+          <input type="radio" name="pay-token" value="${order.orderId}" />
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--primary-dark);">🎫 ${order.orderId}</div>
+            <div style="font-size:12px;color:var(--muted);">${order.serviceCategory||"-"} &bull; ${formatDate(order.createdAt||Date.now())}</div>
+          </div>
+          <span class="payment-status-badge pay-${(order.paymentStatus||"Pending").replace(" ","")}">💳 ${order.paymentStatus||"Pending"}</span>
+        `;
+        container.appendChild(item);
+      });
+      container.querySelectorAll("input[type=radio]").forEach(radio => {
+        radio.addEventListener("change", () => {
+          container.querySelectorAll(".token-select-item").forEach(it => it.classList.remove("selected"));
+          radio.closest(".token-select-item").classList.add("selected");
+        });
+      });
+    }
+
+    // ── Service Form Submit ────────────────────────────────────────
+    $("#service-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser) return showToast("Please login first", "error");
+
+      let valid = true;
+      clearErrors("cat-err","name-err","phone-err","email-err","addr-err");
+
+      const category = $("#service-category").value;
+      const fullName = $("#service-name").value.trim();
+      const phone    = $("#service-phone").value.trim();
+      const email    = $("#service-email").value.trim();
+      const address  = $("#service-address").value.trim();
+      const otherId  = $("#service-other-id").value.trim();
+      const notes    = $("#service-notes").value.trim();
+
+      if (!category) { showFieldError("cat-err", $("#service-category"), true); valid = false; }
+      if (!fullName) { showFieldError("name-err", $("#service-name"), true); valid = false; }
+      if (!isValidPhone(phone)) { showFieldError("phone-err", $("#service-phone"), true); valid = false; }
+      if (!isValidEmail(email)) { showFieldError("email-err", $("#service-email"), true); valid = false; }
+      if (!address) { showFieldError("addr-err", $("#service-address"), true); valid = false; }
+
+      if (!valid) { showToast("Please fix the highlighted errors", "error"); return; }
+
+      const orderId   = generateOrderId();
+      const createdAt = Date.now();
+      const receiptNo = generateReceiptNo(orderId);
+
+      try {
+        const orderData = {
+          orderId, receiptNo, serviceCategory: category,
+          fullName, phone, email, address, otherId, notes,
+          userId: currentUser.uid,
+          status: "Pending", paymentStatus: "Pending",
+          adminRemarks: "", createdAt
+        };
+        await set(ref(db, "orders/" + orderId), orderData);
+        await set(ref(db, "users/" + currentUser.uid + "/ordersIndex/" + orderId), true);
+        await set(ref(db, "users/" + currentUser.uid + "/orders/" + orderId), {
+          orderId, serviceCategory: category, status: "Pending", paymentStatus: "Pending", createdAt
+        });
+
+        if (selectedPostIdForApply) {
+          selectedPostIdForApply = null;
+        }
+
+        showToast("✅ Request submitted! Token: " + orderId);
+        e.target.reset();
+        renderTokenHistoryList();
+        renderOrders();
+        renderPaymentTokenSelect();
+        setTimeout(() => {
+          navigator.clipboard.writeText(orderId).catch(()=>{});
+          alert("Your Token ID is:\n\n" + orderId + "\n\nIt has been copied to clipboard if permission is allowed.");
+        }, 400);
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+    // Real-time clearing of errors as user types
+    ["service-phone"].forEach(id => {
+      const el = $("#" + id);
+      if (el) el.addEventListener("input", () => {
+        if (isValidPhone(el.value.trim())) showFieldError("phone-err", el, false);
+      });
+    });
+    const emailEl = $("#service-email");
+    if (emailEl) emailEl.addEventListener("input", () => {
+      if (isValidEmail(emailEl.value.trim())) showFieldError("email-err", emailEl, false);
+    });
+
+    // ── Custom Request Form Submit ─────────────────────────────────
+    $("#custom-request-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser) return showToast("Please login first", "error");
+
+      let valid = true;
+      clearErrors("ctitle-err","curl-err","cdesc-err");
+
+      const title = $("#custom-title").value.trim();
+      const link  = $("#custom-link").value.trim();
+      const desc  = $("#custom-description").value.trim();
+
+      if (!title) { showFieldError("ctitle-err", $("#custom-title"), true); valid = false; }
+      if (link && !isValidUrl(link)) { showFieldError("curl-err", $("#custom-link"), true); valid = false; }
+      if (!desc) { showFieldError("cdesc-err", $("#custom-description"), true); valid = false; }
+
+      if (!valid) { showToast("Please fix the highlighted errors", "error"); return; }
+
+      const tokenId   = generateOrderId();
+      const createdAt = Date.now();
+      const receiptNo = generateReceiptNo(tokenId);
+
+      try {
+        const reqData = {
+          orderId: tokenId, receiptNo, serviceCategory: "Custom Request",
+          customTitle: title, customLink: link, customDescription: desc,
+          userId: currentUser.uid, status: "Pending", paymentStatus: "Pending",
+          adminRemarks: "", createdAt, requestType: "custom"
+        };
+        await set(ref(db, "orders/" + tokenId), reqData);
+        await set(ref(db, "users/" + currentUser.uid + "/ordersIndex/" + tokenId), true);
+        await set(ref(db, "users/" + currentUser.uid + "/orders/" + tokenId), {
+          orderId: tokenId, serviceCategory: "Custom Request", status: "Pending", paymentStatus: "Pending", createdAt
+        });
+
+        showToast("✅ Custom request sent! Token: " + tokenId);
+        e.target.reset();
+        renderOrders();
+        renderTokenHistoryList();
+        renderPaymentTokenSelect();
+        setTimeout(() => {
+          navigator.clipboard.writeText(tokenId).catch(()=>{});
+          alert("Your Token ID is:\n\n" + tokenId + "\n\nIt has been copied to clipboard if allowed.");
+        }, 500);
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+    // ── Payment Form Submit ────────────────────────────────────────
+    $("#payment-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser) return showToast("Please login first", "error");
+
+      clearErrors("pay-token-err","pay-txn-err","pay-amt-err");
+      let valid = true;
+
+      const selectedToken = document.querySelector("input[name='pay-token']:checked");
+      const txnId  = $("#payment-txn-id").value.trim();
+      const amount = $("#payment-amount").value.trim();
+
+      if (!selectedToken) { showFieldError("pay-token-err", null, true); valid = false; }
+      if (!txnId) { showFieldError("pay-txn-err", $("#payment-txn-id"), true); valid = false; }
+      if (!amount || isNaN(amount) || Number(amount) < 1) { showFieldError("pay-amt-err", $("#payment-amount"), true); valid = false; }
+
+      if (!valid) { showToast("Please fill all required payment fields", "error"); return; }
+
+      const orderId = selectedToken.value;
+      const notes   = $("#payment-notes").value.trim();
+      const paymentSubmittedAt = Date.now();
+
+      // Generate receipt no if not already present
+      const existingOrder = allOrders.find(o => o.orderId === orderId);
+      const receiptNo = existingOrder?.receiptNo || generateReceiptNo(orderId);
+
+      try {
+        const paymentData = {
+          txnId,
+          amountPaid: amount,
+          paymentNotes: notes,
+          paymentStatus: "Submitted",
+          paymentSubmittedAt,
+          receiptNo,
+          paymentMode: "UPI / Manual",
+          paymentUserId: currentUser.uid
+        };
+
+        // Update the main order
+        await update(ref(db, "orders/" + orderId), paymentData);
+        // Also store payment separately for admin easy view
+        await set(ref(db, "payments/" + orderId), {
+          ...paymentData,
+          orderId,
+          serviceCategory: existingOrder?.serviceCategory || "-",
+          fullName: existingOrder?.fullName || "-",
+          userId: currentUser.uid
+        });
+
+        showToast("✅ Payment details submitted! Admin will verify shortly.");
+        e.target.reset();
+        $$("input[name='pay-token']").forEach(r => r.checked = false);
+        $$(".token-select-item").forEach(it => it.classList.remove("selected"));
+
+        // Show receipt
+        const updatedOrder = { ...existingOrder, ...paymentData };
+        setTimeout(() => openReceiptModal(updatedOrder), 600);
+
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+    // ── Exam Posts ─────────────────────────────────────────────────
+    function renderExamPosts() {
+      const container = $("#exam-list");
+      container.innerHTML = "";
+      if (!examPosts.length) {
+        container.innerHTML = `<div class="card"><div class="muted">No live jobs available right now.</div></div>`;
+        return;
+      }
+      const sorted = [...examPosts].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      sorted.forEach(post => {
+        if (post.active === false) return;
+        const card = document.createElement("div");
+        card.className = "exam-card";
+        card.innerHTML = `
+          <div class="exam-head">
+            <div>
+              <h3 class="exam-title">${post.title || "Job / Exam Post"}</h3>
+              <div class="exam-org">${post.org || "Official Update"}</div>
+            </div>
+            <div class="live-status"><span class="live-dot"></span>Job Live</div>
+          </div>
+          <div class="exam-tags">
+            ${post.category ? `<span class="tag">${post.category}</span>` : ""}
+            ${post.type ? `<span class="tag orange">${post.type}</span>` : ""}
+            ${post.lastDate ? `<span class="tag">Last Date: ${post.lastDate}</span>` : ""}
+          </div>
+          <div class="exam-meta">
+            <div class="mini-count-box">
+              <strong>${post.successFilledCount || 0}</strong>
+              <span>Success Filled</span>
+            </div>
+          </div>
+          <div class="muted">${post.description || "Click Apply Now to start this form with eSevaKendra."}</div>
+          <div class="exam-actions">
+            <button class="btn secondary-btn details-btn" data-id="${post.id}">View Details</button>
+            <button class="btn primary-btn apply-btn" data-id="${post.id}">Apply Now</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      $$(".details-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const post = examPosts.find(p => p.id === btn.dataset.id);
+          if (!post) return;
+          alert(`${post.title||"Job / Exam"}\n\n${post.description||""}\n\n${post.org?"Organisation: "+post.org+"\n":""}${post.lastDate?"Last Date: "+post.lastDate+"\n":""}Success Filled: ${post.successFilledCount||0}`);
+        });
+      });
+
+      $$(".apply-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const post = examPosts.find(p => p.id === btn.dataset.id);
+          if (!post) return;
+          document.querySelector('.nav-link[data-section="new-request-section"]').click();
+          $("#service-category").value = "Job / Exam Application";
+          $("#service-notes").value = `${post.title||""}${post.org?" - "+post.org:""}${post.lastDate?" | Last Date: "+post.lastDate:""}`;
+          selectedPostIdForApply = post.id;
+          showToast("Post details added to request form");
+        });
+      });
+    }
+
+    async function incrementPostSuccessCount(postId) {
+      return;
+    }
+
+    // ── Notifications ──────────────────────────────────────────────
+    function updateNotificationBadge() {
+      const unread = notifications.filter(n => !n.read).length;
+      const badge = $("#notification-badge");
+      if (unread > 0) {
+        badge.textContent = unread;
+        badge.classList.remove("hidden");
+      } else {
+        badge.classList.add("hidden");
+      }
+    }
+
+    $("#notification-btn").addEventListener("click", () => {
+      if (!notifications.length) return showToast("No notifications yet");
+      alert(notifications.map(n => `${n.type||"Info"} • ${n.message||""} • ${formatDate(n.createdAt||Date.now())}`).join("\n"));
+    });
+
+    // ── Profile Form ───────────────────────────────────────────────
+    $("#profile-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearErrors("profile-phone-err");
+      const phone = $("#profile-edit-phone").value.trim();
+      if (phone && !isValidPhone(phone)) {
+        showFieldError("profile-phone-err", $("#profile-edit-phone"), true);
+        return;
+      }
+      try {
+        const updates = { name: $("#profile-edit-name").value.trim() };
+        if (phone) updates.phone = phone;
+        await update(ref(db, "users/" + currentUser.uid), updates);
+        showToast("Profile updated!");
+        if (phone) {
+          $("#profile-phone").textContent = phone;
+        }
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+    // ── Password Form ──────────────────────────────────────────────
+    $("#password-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearErrors("newpwd-err");
+      const newPwd = $("#new-password").value;
+      if (newPwd.length < 6) {
+        showFieldError("newpwd-err", $("#new-password"), true);
+        return;
+      }
+      try {
+        const credential = EmailAuthProvider.credential(currentUser.email, $("#current-password").value);
+        await reauthenticateWithCredential(currentUser, credential);
+        await updatePassword(currentUser, newPwd);
+        showToast("Password updated!");
+        e.target.reset();
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+    // ── Support Chat ───────────────────────────────────────────────
+    function sendChatMessage() {
+      const input = $("#chat-input-field");
+      const msg = input.value.trim();
+      if (!msg) return;
+      const msgs = $("#chat-messages");
+      const el = document.createElement("div");
+      el.className = "chat-message user";
+      el.textContent = msg;
+      msgs.appendChild(el);
+      msgs.scrollTop = msgs.scrollHeight;
+      input.value = "";
+    }
+    $("#chat-send-btn").addEventListener("click", sendChatMessage);
+    $("#chat-input-field").addEventListener("keydown", (e) => { if (e.key === "Enter") sendChatMessage(); });
+
+    // ── Ticket Form ────────────────────────────────────────────────
+    $("#ticket-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser) return showToast("Please login first", "error");
+      try {
+        await push(ref(db, "tickets"), {
+          subject: $("#ticket-subject").value.trim(),
+          message: $("#ticket-message").value.trim(),
+          userId: currentUser.uid,
+          status: "Open",
+          createdAt: Date.now()
+        });
+        showToast("Ticket submitted!");
+        e.target.reset();
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+
+  </script>
+</body>
+</html>
